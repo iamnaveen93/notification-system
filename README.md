@@ -65,7 +65,7 @@ The default local database configuration is in `src/main/resources/application.p
 The request requires a unique `x-header-idempotency-key`. Repeating a request with the same key and payload returns the original accepted notification; reusing it with a different payload returns `409 Conflict`.
 
 ```bash
-curl --request POST http://localhost:8080/api/v1/notifications \
+curl --request POST http://localhost:8080/notificaion-service/api/v1/notifications \
   --header 'Content-Type: application/json' \
   --header 'x-header-idempotency-key: login-otp-001' \
   --data '{
@@ -97,7 +97,7 @@ The API channel values are mapped internally as follows:
 
 ### Get notification status
 
-`GET /api/v1/notifications/{notificationId}`
+`GET /notification-service/api/v1/notifications/{notificationId}`
 
 ## Logs
 
