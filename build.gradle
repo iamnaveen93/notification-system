@@ -1,0 +1,97 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.1.2'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.openapi.generator' version '7.26.0'
+}
+
+group = 'com.example'
+version = '1.0.0'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+sourceSets {
+	main {
+		java {
+			srcDir layout.buildDirectory.dir('generated/openapi/src/main/java')
+		}
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+def generatedOpenApiDir =
+		layout.buildDirectory.dir('generated/openapi').get().asFile
+
+tasks.named("openApiGenerate") {
+
+	generatorName = 'spring'
+
+	inputSpec = "$projectDir/src/main/resources/openapi/api-contract.yaml"
+	outputDir = generatedOpenApiDir.absolutePath
+
+	modelPackage = 'com.example.notificationsystem.dto'
+	apiPackage = 'com.example.notificationsystem.api'
+	invokerPackage = 'com.example.notificationsystem'
+
+	globalProperties = [
+			models         : '',
+			apis           : 'false',
+			supportingFiles: 'false',
+			modelDocs      : 'false',
+			modelTests     : 'false',
+			apiDocs        : 'false',
+			apiTests       : 'false'
+	]
+
+	configOptions = [
+			useSpringBoot3                      : 'true',
+			dateLibrary                         : 'java8',
+			useBeanValidation                   : 'true',
+			openApiNullable                     : 'false',
+			hideGenerationTimestamp             : 'true',
+			generatedConstructorWithRequiredArgs: 'false'
+	]
+}
+
+tasks.named("compileJava") {
+	dependsOn tasks.named("openApiGenerate")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-flyway'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
+	implementation 'io.swagger.core.v3:swagger-annotations-jakarta:2.2.39'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.flywaydb:flyway-mysql'
+	runtimeOnly 'com.mysql:mysql-connector-j'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-actuator-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-validation-test'
+	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+	testCompileOnly 'org.projectlombok:lombok'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	testAnnotationProcessor 'org.projectlombok:lombok'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
+
+// The Spring Boot archive is the only artifact copied into the runtime image.
+// Without this, build/libs contains both the executable and the plain JAR,
+// making Docker's wildcard COPY ambiguous.
+tasks.named('jar') {
+	enabled = false
+}
